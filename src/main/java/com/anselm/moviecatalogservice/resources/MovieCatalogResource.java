@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,15 +28,17 @@ public class MovieCatalogResource {
 	@RequestMapping("/{userId}")
 	public List<CatalogItem> getCatalog(@PathVariable("userId") String userId) { 
 		
+		//localhost:8083
+		//ratings-data-service
 		UserRating ratings = restTemplate.getForObject("http://ratings-data-service/ratingsdata/users/" + userId, UserRating.class);
 		
 		return ratings.getUserRating().stream().map(rating -> {
 			// For each movie ID, call movie info service and get details
+			//localhost:8082
+			//movie-info-service
 			Movie movie = restTemplate.getForObject("http://movie-info-service/movies/" + rating.getMovieId(), Movie.class);
-			return new CatalogItem(movie.getName(), "Desc", rating.getRating());
+			return new CatalogItem(movie.getName(), movie.getDesc(), rating.getRating());
 		})
 		.collect(Collectors.toList());
-		// Put them all together
-		
 	}
 }
