@@ -32,7 +32,7 @@ public class UserRatingInfo {
 		// Bulkhead Pattern
 		threadPoolKey = "movieInfoPool",
 		threadPoolProperties = {
-				@HystrixProperty(name = "coreSiz", value = "20"),
+				@HystrixProperty(name = "coreSize", value = "20"),
 				@HystrixProperty(name = "maxQueueSize", value = "10")
 		}
 	)
