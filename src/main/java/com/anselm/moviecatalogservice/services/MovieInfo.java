@@ -17,14 +17,23 @@ public class MovieInfo {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	@HystrixCommand(fallbackMethod = "getFallbackCatalogItem",
-	commandProperties = {
-			@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000"),
-			@HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "5"),
-			@HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "50"),
-			@HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000")
-			
-	})
+	@HystrixCommand(
+		// circuit Breaker
+		fallbackMethod = "getFallbackCatalogItem",
+		commandProperties = {
+				@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000"),
+				@HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "5"),
+				@HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "50"),
+				@HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000")
+				
+		},
+		// Bulkhead Pattern
+		threadPoolKey = "movieInfoPool",
+		threadPoolProperties = {
+				@HystrixProperty(name = "coreSiz", value = "20"),
+				@HystrixProperty(name = "maxQueueSize", value = "10")
+		}
+	)
 	public CatalogItem getCatalogItem(Rating rating) {
 		// For each movie ID, call movie info service and get details
 		//localhost:8082
