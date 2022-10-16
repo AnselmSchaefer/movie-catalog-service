@@ -16,6 +16,9 @@ import com.anselm.moviecatalogservice.models.CatalogItem;
 import com.anselm.moviecatalogservice.models.Movie;
 import com.anselm.moviecatalogservice.models.Rating;
 import com.anselm.moviecatalogservice.models.UserRating;
+import com.anselm.moviecatalogservice.services.MovieInfo;
+import com.anselm.moviecatalogservice.services.UserRatingInfo;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 @RestController
 @RequestMapping("/catalog")
@@ -25,20 +28,20 @@ public class MovieCatalogResource {
 	@Autowired
 	private RestTemplate restTemplate;
 	
+	
+	@Autowired MovieInfo movieInfo;
+	  
+	@Autowired UserRatingInfo userRatingInfo;
+	 
+	
 	@RequestMapping("/{userId}")
 	public List<CatalogItem> getCatalog(@PathVariable("userId") String userId) { 
 		
-		//localhost:8083
-		//ratings-data-service
-		UserRating ratings = restTemplate.getForObject("http://ratings-data-service/ratingsdata/users/" + userId, UserRating.class);
-		
-		return ratings.getUserRating().stream().map(rating -> {
-			// For each movie ID, call movie info service and get details
-			//localhost:8082
-			//movie-info-service
-			Movie movie = restTemplate.getForObject("http://movie-info-service/movies/" + rating.getMovieId(), Movie.class);
-			return new CatalogItem(movie.getName(), movie.getDesc(), rating.getRating());
-		})
-		.collect(Collectors.toList());
+		UserRating userRating = userRatingInfo.getUserRating(userId);
+		return userRating.getUserRating().stream()
+			.map(rating -> {
+				return movieInfo.getCatalogItem(rating);
+			})
+			.collect(Collectors.toList());
 	}
 }
